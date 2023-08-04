@@ -1,6 +1,6 @@
 type Pattern = [CellPos; 3];
 
-use super::Player;
+use super::Team;
 use colored::ColoredString;
 use colored::Colorize;
 
@@ -25,8 +25,9 @@ pub struct CellPos {
     pub y: usize,
 }
 
+#[derive(Clone, Copy)]
 pub struct Board {
-    board: [[Option<Player>; BOARD_SIZE]; BOARD_SIZE],
+    board: [[Option<Team>; BOARD_SIZE]; BOARD_SIZE],
 }
 
 
@@ -54,7 +55,7 @@ impl Board {
         } println!("\n");
     }
 
-    pub fn get_cell(self: &Self, pos: &CellPos) -> Option<Player> {
+    pub fn get_cell(self: &Self, pos: &CellPos) -> Option<Team> {
         self.board[pos.y][pos.x]
     }
 
@@ -71,18 +72,24 @@ impl Board {
         } free_cells
     }
 
-    pub fn make_move(self: &mut Self, player: Player, pos: &CellPos) {
-        self.set_cell(Some(player), pos);
+    pub fn make_move(self: &mut Self, team: Team, pos: &CellPos) {
+        self.set_cell(Some(team), pos);
     }
 
-    pub fn check_for_win(self: &Self) -> Option<(Player, Pattern)> {
+    pub fn check_for_win(self: &Self) -> Option<(Team, Pattern)> {
         for pattern in WIN_PATTERNS {
-            let candidate: Option<Player> = self.get_cell(&pattern[0]);
+            let candidate: Option<Team> = self.get_cell(&pattern[0]);
             match candidate {
                 None => continue,
-                Some(player) => if self.is_match(&pattern, player) { return Some((player, pattern)); },
+                Some(team) => if self.is_match(&pattern, team) { return Some((team, pattern)); },
             }
         } None
+    }
+
+    pub fn check_for_potential_win(self: &Self, team: Team, pos: &CellPos) -> Option<(Team, Pattern)> {
+        let mut board_copy: Board = self.clone();
+        board_copy.set_cell(Some(team), pos);
+        board_copy.check_for_win()
     }
 
     pub fn is_draw(self: &Self) -> bool {
@@ -96,15 +103,15 @@ impl Board {
         } true
     }
 
-    fn set_cell(self: &mut Self, player: Option<Player>, pos: &CellPos) {
-        self.board[pos.y][pos.x] = player;
+    fn set_cell(self: &mut Self, team: Option<Team>, pos: &CellPos) {
+        self.board[pos.y][pos.x] = team;
     }
 
-    fn is_match(self: &Self, pattern: &[CellPos; 3], candidate: Player) -> bool {
+    fn is_match(self: &Self, pattern: &[CellPos; 3], candidate: Team) -> bool {
         for pos in pattern {
             match self.get_cell(pos) {
                 None => return false,
-                Some(player) => { if player != candidate {return  false;} },
+                Some(team) => { if team != candidate {return  false;} },
             }
         } true
     }
@@ -113,13 +120,13 @@ impl Board {
     {
         let pad = |s: ColoredString| -> ColoredString { format!(" {} ", s).normal() };
         match self.get_cell(pos) {
-            Some(player) => {
+            Some(team) => {
                 match win_pattern {
-                    None => return pad(player.to_string().bold()),
+                    None => return pad(team.to_string().bold()),
                     Some(pattern) => {
                         if pattern.contains(pos) {
-                            return pad(player.to_string().bold()).on_bright_black();
-                        } else { return pad(player.to_string().bold());}
+                            return pad(team.to_string().bold()).on_bright_black();
+                        } else { return pad(team.to_string().bold());}
                     }
                 }
             },

@@ -17,13 +17,13 @@ pub enum Controller {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub enum Player {
+pub enum Team {
     NOUGHTS,
     CROSSES,
 }
 
 pub struct Profile {
-    pub player: Player,
+    pub team: Team,
     pub controller: Controller,
 }
 
@@ -37,16 +37,16 @@ impl fmt::Display for Controller {
      }
 }
 
-impl fmt::Display for Player {
+impl fmt::Display for Team {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Player::NOUGHTS => write!(f, "{}", "O".color(Color::BrightGreen)),
-            Player::CROSSES => write!(f, "{}", "X".color(Color::Magenta)),
+            Team::NOUGHTS => write!(f, "{}", "O".color(Color::BrightGreen)),
+            Team::CROSSES => write!(f, "{}", "X".color(Color::Magenta)),
         }
     }
 }
 
-pub fn play_game(noughts_player_profile: Profile, crosses_player_profile: Profile) -> Option<Player> {
+pub fn play_game(noughts_player_profile: Profile, crosses_player_profile: Profile) -> Option<Team> {
     let mut board = board::Board::new();
 
     board.print(None);
@@ -55,12 +55,12 @@ pub fn play_game(noughts_player_profile: Profile, crosses_player_profile: Profil
     loop {
         for turn in &player_profiles {
             let move_pos: CellPos = get_move(&board, turn);
-            board.make_move(turn.player, &move_pos);
+            board.make_move(turn.team, &move_pos);
 
             match board.check_for_win() {
-                Some((player, win_pattern)) => {
+                Some((team, win_pattern)) => {
                     board.print(Some(&win_pattern));
-                    return Some(player);
+                    return Some(team);
                 },
                 None => board.print(None),
             }
@@ -70,11 +70,11 @@ pub fn play_game(noughts_player_profile: Profile, crosses_player_profile: Profil
 }
 
 pub fn get_move(board: &Board, turn: &Profile) -> CellPos {
-    println!("It is {}'s turn.", turn.player.to_string());
+    println!("It is {}'s turn.", turn.team.to_string());
 
     match turn.controller {
         Controller::HUMAN => return get_human_move(board),
-        Controller::COMPUTER(difficulty) => return bot::generate_move(board, difficulty),
+        Controller::COMPUTER(difficulty) => return bot::generate_move(board, difficulty, turn.team),
     }
 }
 

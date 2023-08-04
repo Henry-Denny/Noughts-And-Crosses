@@ -1,5 +1,5 @@
 use game::Controller;
-use game::Player;
+use game::Team;
 use std::io;
 
 use crate::game::Profile;
@@ -12,9 +12,9 @@ fn main() {
     println!("| Welcome to Noughts and Crosses |");
     println!("+--------------------------------+\n");
 
-    let result = game::play_game(
-        get_player_profile(Player::NOUGHTS),
-        get_player_profile(Player::CROSSES)
+    let result: Option<Team> = game::play_game(
+        get_player_profile(Team::NOUGHTS),
+        get_player_profile(Team::CROSSES)
     );
 
     match result {
@@ -23,14 +23,14 @@ fn main() {
     }
 }
 
-fn get_player_profile(player: Player) -> Profile {
-    println!("Please choose a controller for {}:", player);
+fn get_player_profile(team: Team) -> Profile {
+    println!("Please choose a controller for {}:", team);
     println!("1. Human");
     println!("2. Computer\n");
 
     let controller: Controller = get_controller();
 
-    Profile { player, controller }
+    Profile { team, controller }
 
 }
 

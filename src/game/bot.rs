@@ -1,6 +1,6 @@
 use rand::Rng;
 
-use super::Player;
+use super::Team;
 use super::board::{Board, CellPos};
 
 #[derive(Clone, Copy)]
@@ -9,10 +9,10 @@ pub enum Difficulty {
     HARD,
 }
 
-pub fn generate_move(board: &Board, difficulty: Difficulty) -> CellPos {
+pub fn generate_move(board: &Board, difficulty: Difficulty, team: Team) -> CellPos {
     match difficulty {
         Difficulty::EASY => generate_easy_move(board),
-        Difficulty::HARD => generate_hard_move(board),
+        Difficulty::HARD => generate_hard_move(board, team),
     }
 }
 
@@ -28,20 +28,32 @@ fn get_rand_from(cells: &Vec<CellPos>) -> CellPos {
     cells[rand_index]
 }
 
-fn generate_hard_move(board: &Board) -> CellPos {
-    match find_imminent_win(board, Player::NOUGHTS) {
-        Some(pos) => return pos,
+fn generate_hard_move(board: &Board, team: Team) -> CellPos {
+    let enemy_team = match team {
+        Team::NOUGHTS => Team::CROSSES,
+        Team::CROSSES => Team::NOUGHTS,
+    };
+
+    match find_imminent_win(board, team) {
+        Some(win) => return win,
         None => (),
     }
 
-    match find_imminent_win(board, Player::CROSSES) {
-        Some(pos) => return pos,
+    match find_imminent_win(board, enemy_team) {
+        Some(block) => return block,
         None => (),
     }
 
     generate_easy_move(board)
 }
 
-fn find_imminent_win(board: &Board, player: Player) -> Option<CellPos> {
+fn find_imminent_win(board: &Board, team: Team) -> Option<CellPos> {
+    let free_cells = board.get_free_cells();
+    for cell in free_cells {
+        match board.check_for_potential_win(team, &cell) {
+            Some(_) => return Some(cell),
+            _ =>(),
+        }
+    }
     None
 }
